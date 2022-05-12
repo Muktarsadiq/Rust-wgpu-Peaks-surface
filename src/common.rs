@@ -373,7 +373,7 @@ pub fn run(vertex_data: &Vec<Vertex>, light_data: Light, colormap_name: &str, ti
     env_logger::init();
     let event_loop = EventLoop::new();
     let window = winit::window::WindowBuilder::new().build(&event_loop).unwrap();
-    window.set_title(&*format!("ch09_{}: {}", title, colormap_name));
+    window.set_title(&*format!("{}: {}", title, colormap_name));
 
     let mut state = pollster::block_on(State::new(&window, &vertex_data, light_data));    
     let render_start_time = std::time::Instant::now();
