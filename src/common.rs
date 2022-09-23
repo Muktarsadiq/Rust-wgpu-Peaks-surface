@@ -67,17 +67,6 @@ nx:usize, nz:usize, scale:f32, aspect:f32) -> Vec<Vertex> {
     data.to_vec()
 }
 
-/*pub fn create_vertices_param(f: &dyn Fn(f32, f32) -> [f32; 3], colormap_name: &str, umin:f32, umax:f32, vmin:f32, vmax:f32, 
-nu:usize, nv: usize, xmin:f32, xmax:f32, zmin:f32, zmax:f32, scale:f32, scaley:f32) -> Vec<Vertex> {
-    let(pos, normal, color, _uv, _uv1) = 
-        surface::parametric_surface_data(f, colormap_name, umin, umax, vmin, vmax, nu, nv, xmin, xmax, zmin, zmax, scale, scaley);
-    let mut data:Vec<Vertex> = Vec::with_capacity(pos.len());
-    for i in 0..pos.len() {
-        data.push(vertex(pos[i], normal[i], color[i]));
-    }
-    data.to_vec()
-}*/
-
 impl Vertex {
     const ATTRIBUTES: [wgpu::VertexAttribute; 3] = wgpu::vertex_attr_array![0=>Float32x4, 1=>Float32x4, 2=>Float32x4];
     fn desc<'a>() -> wgpu::VertexBufferLayout<'a> {
@@ -104,7 +93,7 @@ impl State {
     pub async fn new(window: &Window, vertex_data: &Vec<Vertex>, light_data: Light) -> Self {        
         let init =  transforms::InitWgpu::init_wgpu(window).await;
 
-        let shader = init.device.create_shader_module(&wgpu::ShaderModuleDescriptor {
+        let shader = init.device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("Shader"),
             source: wgpu::ShaderSource::Wgsl(include_str!("shader.wgsl").into()),
             //source: wgpu::ShaderSource::Wgsl(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/examples/ch06/line3d.wgsl")).into()),
@@ -225,14 +214,14 @@ impl State {
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
                 entry_point: "fs_main",
-                targets: &[wgpu::ColorTargetState {
+                targets: &[Some(wgpu::ColorTargetState {
                     format: init.config.format,
                     blend: Some(wgpu::BlendState {
                         color: wgpu::BlendComponent::REPLACE,
                         alpha: wgpu::BlendComponent::REPLACE,
                     }),
                     write_mask: wgpu::ColorWrites::ALL,
-                }],
+                })],
             }),
             primitive: wgpu::PrimitiveState{
                 topology: wgpu::PrimitiveTopology::TriangleList,
@@ -332,7 +321,7 @@ impl State {
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
-                color_attachments: &[wgpu::RenderPassColorAttachment {
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
@@ -344,7 +333,7 @@ impl State {
                         }),
                         store: true,
                     },
-                }],
+                })],
                 //depth_stencil_attachment: None,
                 depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                     view: &depth_view,
@@ -373,7 +362,7 @@ pub fn run(vertex_data: &Vec<Vertex>, light_data: Light, colormap_name: &str, ti
     env_logger::init();
     let event_loop = EventLoop::new();
     let window = winit::window::WindowBuilder::new().build(&event_loop).unwrap();
-    window.set_title(&*format!("{}: {}", title, colormap_name));
+    window.set_title(&*format!("ch09_{}: {}", title, colormap_name));
 
     let mut state = pollster::block_on(State::new(&window, &vertex_data, light_data));    
     let render_start_time = std::time::Instant::now();
